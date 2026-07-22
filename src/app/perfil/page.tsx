@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
+import AjustesApp from "@/components/AjustesApp";
 import { createClient } from "@/lib/supabase/client";
 import { cargarDatosEjemplo, borrarDatos } from "@/app/actions";
 
@@ -78,6 +79,12 @@ export default function PerfilPage() {
           texto="Mis objetivos"
         />
       </div>
+
+      {/* Apariencia y sonido */}
+      <p className="mt-6 font-display text-lg font-bold text-navy">
+        Apariencia
+      </p>
+      <AjustesApp />
 
       {/* Datos de ejemplo */}
       <div className="card mt-6">

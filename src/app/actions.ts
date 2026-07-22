@@ -464,3 +464,29 @@ export async function borrarObjetivo(id: string) {
   revalidatePath("/objetivos");
   return { ok: true };
 }
+
+// ============================================================
+// Onboarding: guardar perfil inicial
+// ============================================================
+export async function guardarPerfilOnboarding(formData: FormData) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+
+  const ingreso_mensual = Number(formData.get("ingreso_mensual") ?? 0);
+  const situacion = String(formData.get("situacion") ?? "solo");
+  const num_hijos = Number(formData.get("num_hijos") ?? 0);
+  const fondo_objetivo = Number(formData.get("fondo_objetivo") ?? 0);
+
+  await supabase.from("perfil_financiero").upsert({
+    user_id: user.id,
+    ingreso_mensual,
+    tipo_ingreso: "fijo",
+    situacion,
+    num_hijos,
+    objetivo_principal: "Crear un fondo de emergencia",
+    fondo_objetivo: fondo_objetivo || null,
+  });
+
+  revalidatePath("/dashboard");
+  return { ok: true };
+}

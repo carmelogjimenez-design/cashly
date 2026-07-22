@@ -36,6 +36,11 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('cashly-tema')==='oscuro'){document.documentElement.classList.add('dark')}}catch(e){}`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"

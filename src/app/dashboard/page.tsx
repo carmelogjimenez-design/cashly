@@ -18,8 +18,10 @@ import {
 import AppShell from "@/components/AppShell";
 import AnilloSalud from "@/components/AnilloSalud";
 import Barra from "@/components/Barra";
-import CargarEjemplo from "@/components/CargarEjemplo";
-import Contador from "@/components/Contador";
+import Onboarding from "@/components/Onboarding";
+import Mascota, { estadoDesde, fraseMascota } from "@/components/Mascota";
+import FlujoDinero from "@/components/FlujoDinero";
+import Atmosfera from "@/components/Atmosfera";
 import { createClient } from "@/lib/supabase/server";
 import { getResumen } from "@/lib/datos";
 import {
@@ -45,19 +47,7 @@ export default async function DashboardPage() {
   if (!resumen.tieneDatos) {
     return (
       <AppShell>
-        <p className="font-display text-lg font-semibold text-navy/70">
-          Hola, {nombre} 👋
-        </p>
-        <h1 className="font-display text-3xl font-bold leading-tight text-navy">
-          Vamos a poner en marcha tu Cashly.
-        </h1>
-        <CargarEjemplo />
-        <p className="mt-4 text-center text-sm font-semibold text-slate">
-          ¿Prefieres empezar con lo tuyo?{" "}
-          <Link href="/cuentas" className="font-bold text-navy underline">
-            Añade tu primera cuenta
-          </Link>
-        </p>
+        <Onboarding />
       </AppShell>
     );
   }
@@ -72,15 +62,22 @@ export default async function DashboardPage() {
   const alertas = calcularAlertas(m, resumen.prestamos);
   const numAvisos = alertas.filter((a) => a.nivel !== "bien").length;
 
+  const otrosGastos = Math.max(
+    0,
+    m.gastosMes - m.gastosEsenciales - m.gastosPrescindibles
+  );
+
   return (
     <AppShell>
+      <Atmosfera puntos={salud.total} />
+
       <div className="flex items-start justify-between">
         <div>
           <p className="font-display text-lg font-semibold text-navy/70">
             Hola, {nombre} 👋
           </p>
           <h1 className="font-display text-3xl font-bold leading-tight text-navy">
-            Este es tu panel de Cashly.
+            Este es tu panel.
           </h1>
         </div>
         <Link
@@ -96,8 +93,16 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
+      {/* Mascota con mensaje */}
+      <div className="card mt-5 flex items-center gap-3">
+        <Mascota puntos={salud.total} size={88} />
+        <p className="flex-1 font-semibold leading-snug text-navy">
+          {fraseMascota(estadoDesde(salud.total))}
+        </p>
+      </div>
+
       {/* Salud financiera */}
-      <div className="card mt-6 bg-navy text-white">
+      <div className="card mt-4 bg-navy text-white">
         <div className="flex items-center gap-5">
           <AnilloSalud puntos={salud.total} nivel={salud.nivel} />
           <div className="flex-1">
@@ -105,11 +110,10 @@ export default async function DashboardPage() {
               Tu salud financiera
             </p>
             <p className="text-sm font-semibold text-white/80">
-              Sobre 100. Se calcula con cinco áreas de tu economía.
+              Sobre 100. Cinco áreas de tu economía.
             </p>
           </div>
         </div>
-
         <div className="mt-5 space-y-3">
           {salud.areas.map((a) => (
             <div key={a.nombre}>
@@ -123,35 +127,15 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Resumen del mes */}
-      <div className="card mt-4">
-        <p className="font-display text-lg font-bold text-navy">
-          Resumen del mes
-        </p>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-          <div>
-            <p className="text-xs font-bold text-slate">Ingresos</p>
-            <p className="font-display text-lg font-bold text-navy">
-              <Contador valor={m.ingresosMes} />
-            </p>
-          </div>
-          <div>
-            <p className="text-xs font-bold text-slate">Gastos</p>
-            <p className="font-display text-lg font-bold text-navy">
-              <Contador valor={m.gastosMes} />
-            </p>
-          </div>
-          <div>
-            <p className="text-xs font-bold text-slate">Ahorro</p>
-            <p
-              className={`font-display text-lg font-bold ${
-                m.ahorroReal >= 0 ? "text-navy" : "text-red-500"
-              }`}
-            >
-              <Contador valor={m.ahorroReal} />
-            </p>
-          </div>
-        </div>
+      {/* Flujo del dinero */}
+      <div className="mt-4">
+        <FlujoDinero
+          ingresos={m.ingresosMes}
+          esenciales={m.gastosEsenciales}
+          otros={otrosGastos}
+          prescindible={m.gastosPrescindibles}
+          ahorro={m.ahorroReal}
+        />
       </div>
 
       {/* Tu mejor movimiento */}
@@ -252,30 +236,6 @@ export default async function DashboardPage() {
   );
 }
 
-function Herramienta({
-  href,
-  icon,
-  titulo,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  titulo: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="card flex flex-col items-center gap-2 px-2 py-4 text-center"
-    >
-      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-yellow text-navy">
-        {icon}
-      </span>
-      <span className="text-xs font-bold leading-tight text-navy">
-        {titulo}
-      </span>
-    </Link>
-  );
-}
-
 function Acceso({
   href,
   icon,
@@ -288,7 +248,7 @@ function Acceso({
   nota: string;
 }) {
   return (
-    <Link href={href} className="card flex items-center gap-3">
+    <Link href={href} className="card press flex items-center gap-3">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan text-navy">
         {icon}
       </span>
@@ -297,6 +257,30 @@ function Acceso({
         <p className="truncate text-xs font-semibold text-slate">{nota}</p>
       </div>
       <ArrowRight size={16} strokeWidth={2.5} className="text-slate" />
+    </Link>
+  );
+}
+
+function Herramienta({
+  href,
+  icon,
+  titulo,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  titulo: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="card press flex flex-col items-center gap-2 px-2 py-4 text-center"
+    >
+      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-yellow text-navy">
+        {icon}
+      </span>
+      <span className="text-xs font-bold leading-tight text-navy">
+        {titulo}
+      </span>
     </Link>
   );
 }

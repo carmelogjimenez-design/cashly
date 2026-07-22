@@ -14,6 +14,7 @@ import Barra from "@/components/Barra";
 import { BotonBorrar } from "@/components/GestorCuentas";
 import { toast } from "@/lib/toast";
 import { celebra } from "@/lib/celebra";
+import { celebrarFeedback, toque } from "@/lib/feedback";
 
 export default function GestorObjetivos({
   objetivos,
@@ -56,8 +57,10 @@ function Tarjeta({ o, onEditar }: { o: Objetivo; onEditar: () => void }) {
       setMonto("");
       if (signo > 0 && nuevoTotal >= o.cantidad_objetivo) {
         celebra();
+        celebrarFeedback();
         toast("¡Objetivo completado! 🎉");
       } else {
+        toque();
         toast(signo > 0 ? "Aportado a tu meta" : "Retirado de tu meta");
       }
       router.refresh();

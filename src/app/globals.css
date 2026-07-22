@@ -28,7 +28,7 @@ body::before {
   pointer-events: none;
   background: radial-gradient(
     120% 60% at 50% -10%,
-    rgba(255, 255, 255, 0.35),
+    var(--halo, rgba(255, 255, 255, 0.35)),
     rgba(255, 255, 255, 0) 60%
   );
   z-index: 0;
@@ -264,4 +264,108 @@ select:focus-visible {
     transition: none !important;
     opacity: 1 !important;
   }
+}
+
+/* ---------- Parpadeo de la mascota ---------- */
+@keyframes blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+.cash-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 4.5s infinite;
+}
+
+/* ============================================================
+   MODO NOCHE
+   Se cambian las superficies neutras y el texto neutro;
+   los acentos (amarillo, cian, navy) se reafirman donde hace falta.
+   ============================================================ */
+.dark body {
+  background: linear-gradient(180deg, #0a1730 0%, #081428 55%, #060f20 100%)
+    no-repeat;
+  background-color: #081428;
+}
+.dark {
+  --halo: rgba(120, 200, 255, 0.08);
+}
+
+/* Superficies */
+.dark .bg-white {
+  background-color: #12294d !important;
+}
+.dark .card {
+  background-color: #12294d;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 14px 30px -16px rgba(0, 0, 0, 0.6);
+}
+.dark .bg-navy {
+  background-color: #0b1d3d !important;
+}
+.dark .field {
+  background-color: #0d2244 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #eaf1fc !important;
+}
+
+/* Texto neutro */
+.dark .text-navy {
+  color: #eaf1fc !important;
+}
+.dark .text-slate {
+  color: #9fb0ce !important;
+}
+.dark .text-navy\/70,
+.dark .text-navy\/80,
+.dark .text-navy\/60,
+.dark .text-navy\/50 {
+  color: rgba(234, 241, 252, 0.75) !important;
+}
+
+/* Bordes y divisores */
+.dark .border-navy\/10,
+.dark .border-navy\/15,
+.dark .border-navy\/5 {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+.dark .divide-navy\/5 > * + * {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Reafirmar texto oscuro SOBRE superficies de acento claras */
+.dark .bg-yellow .text-navy,
+.dark .bg-yellow.text-navy,
+.dark .bg-yellow .text-navy\/60,
+.dark .bg-yellow .text-navy\/80,
+.dark .bg-cyan .text-navy,
+.dark .bg-cyan\/40 .text-navy,
+.dark .bg-cyan\/30 .text-navy,
+.dark .bg-cyan\/20 .text-navy,
+.dark .bg-emerald-500 .text-navy,
+.dark .bg-yellow.text-navy {
+  color: #071a3a !important;
+}
+
+/* La tarjeta amarilla mantiene su texto oscuro */
+.dark .bg-yellow {
+  color: #071a3a;
+}
+
+/* Reduce movimiento también para el parpadeo */
+@media (prefers-reduced-motion: reduce) {
+  .cash-blink {
+    animation: none !important;
+  }
+}
+
+/* Iconos sobre chips de acento (mismo elemento) en modo noche */
+.dark .bg-cyan.text-navy,
+.dark .bg-yellow.text-navy {
+  color: #071a3a !important;
 }
