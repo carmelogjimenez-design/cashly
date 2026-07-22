@@ -1,4 +1,12 @@
-type Estado = "celebra" | "feliz" | "contento" | "neutral" | "preocupado";
+type Estado =
+  | "celebra"
+  | "feliz"
+  | "contento"
+  | "neutral"
+  | "preocupado"
+  | "guino"
+  | "idea"
+  | "dinero";
 
 export function estadoDesde(puntos: number): Estado {
   if (puntos >= 80) return "celebra";
@@ -20,6 +28,8 @@ export function fraseMascota(estado: Estado): string {
       return "Hay margen de mejora. Damos un paso hoy.";
     case "preocupado":
       return "Tranquilo, lo enderezamos juntos. Vamos por partes.";
+    default:
+      return "Vamos a por ello.";
   }
 }
 
@@ -84,6 +94,40 @@ export default function Mascota({
               fill="none"
             />
           </>
+        ) : e === "dinero" ? (
+          <>
+            <text
+              x="46"
+              y="58"
+              textAnchor="middle"
+              fontSize="16"
+              fontWeight="800"
+              fill="#071A3A"
+            >
+              €
+            </text>
+            <text
+              x="74"
+              y="58"
+              textAnchor="middle"
+              fontSize="16"
+              fontWeight="800"
+              fill="#071A3A"
+            >
+              €
+            </text>
+          </>
+        ) : e === "guino" ? (
+          <>
+            <circle cx="46" cy="53" r="5.5" fill="#071A3A" />
+            <path
+              d="M68 53 Q74 49 80 53"
+              stroke="#071A3A"
+              strokeWidth="5"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </>
         ) : (
           <>
             <circle cx="46" cy="53" r="5.5" fill="#071A3A" />
@@ -93,18 +137,27 @@ export default function Mascota({
       </g>
 
       {/* mejillas (estados alegres) */}
-      {(e === "celebra" || e === "feliz") && (
+      {(e === "celebra" || e === "feliz" || e === "dinero" || e === "guino") && (
         <>
           <circle cx="38" cy="66" r="5" fill="#FF8FA3" opacity="0.7" />
           <circle cx="82" cy="66" r="5" fill="#FF8FA3" opacity="0.7" />
         </>
       )}
 
+      {/* bombilla (idea) */}
+      {e === "idea" && (
+        <g className="animate-pulse-soft">
+          <circle cx="60" cy="9" r="7" fill="#FFE500" stroke="#E5CE00" strokeWidth="1.5" />
+          <rect x="57" y="14" width="6" height="3" rx="1" fill="#071A3A" />
+          <path d="M46 12 l-5 -3 M74 12 l5 -3 M60 -1 v-4" stroke="#FFE500" strokeWidth="2" strokeLinecap="round" />
+        </g>
+      )}
+
       {/* boca */}
       {e === "celebra" && (
         <path d="M44 70 Q60 92 76 70 Q60 80 44 70 Z" fill="#071A3A" />
       )}
-      {e === "feliz" && (
+      {(e === "feliz" || e === "guino" || e === "idea" || e === "dinero") && (
         <path
           d="M46 71 Q60 86 74 71"
           stroke="#071A3A"

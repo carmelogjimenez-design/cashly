@@ -1,6 +1,7 @@
 import AppShell from "@/components/AppShell";
 import GestorObjetivos from "@/components/GestorObjetivos";
 import NuevoObjetivo from "@/components/NuevoObjetivo";
+import Mascota from "@/components/Mascota";
 import { getResumen } from "@/lib/datos";
 
 export default async function ObjetivosPage() {
@@ -14,9 +15,13 @@ export default async function ObjetivosPage() {
       </p>
 
       {resumen.objetivos.length === 0 && (
-        <div className="card mt-6 text-center">
-          <p className="font-semibold text-slate">
-            Aún no tienes objetivos. Crea el primero.
+        <div className="card mt-6 flex flex-col items-center text-center">
+          <Mascota estado="idea" size={96} />
+          <p className="mt-2 font-semibold text-navy">
+            ¿Qué te haría ilusión conseguir?
+          </p>
+          <p className="text-sm font-semibold text-slate">
+            Crea tu primera meta y te digo cuánto ahorrar al mes.
           </p>
         </div>
       )}

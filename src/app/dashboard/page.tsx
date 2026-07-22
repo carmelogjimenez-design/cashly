@@ -22,6 +22,7 @@ import Onboarding from "@/components/Onboarding";
 import Mascota, { estadoDesde, fraseMascota } from "@/components/Mascota";
 import FlujoDinero from "@/components/FlujoDinero";
 import Atmosfera from "@/components/Atmosfera";
+import Tendencias from "@/components/Tendencias";
 import { createClient } from "@/lib/supabase/server";
 import { getResumen } from "@/lib/datos";
 import {
@@ -29,6 +30,7 @@ import {
   calcularSalud,
   mejorMovimiento,
   calcularAlertas,
+  calcularTendencias,
   hayDeudaCara,
   euro,
 } from "@/lib/finanzas";
@@ -60,6 +62,7 @@ export default async function DashboardPage() {
     resumen.perfil?.fondo_objetivo ?? null
   );
   const alertas = calcularAlertas(m, resumen.prestamos);
+  const tendencias = calcularTendencias(resumen);
   const numAvisos = alertas.filter((a) => a.nivel !== "bien").length;
 
   const otrosGastos = Math.max(
@@ -137,6 +140,13 @@ export default async function DashboardPage() {
           ahorro={m.ahorroReal}
         />
       </div>
+
+      {/* Tendencias */}
+      {tendencias.hayComparacion && (
+        <div className="mt-4">
+          <Tendencias datos={tendencias} />
+        </div>
+      )}
 
       {/* Tu mejor movimiento */}
       <div className="card mt-4 bg-yellow">

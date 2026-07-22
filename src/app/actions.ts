@@ -183,6 +183,27 @@ export async function cargarDatosEjemplo() {
     g(20, "iCloud", 2.99, "Suscripciones", { recurrente: true }),
     // Ahorro
     g(27, "Traspaso a ahorro", 200, "Ahorro", { recurrente: true }),
+
+    // ----- Mes anterior (para tendencias) -----
+    g(58, "Nómina", 3200, "Ingreso", { ingreso: true, recurrente: true }),
+    g(57, "Nómina pareja", 2000, "Ingreso", { ingreso: true, recurrente: true }),
+    g(56, "Hipoteca", 1150, "Deudas", { recurrente: true }),
+    g(55, "Préstamo coche", 245, "Deudas", { recurrente: true }),
+    g(54, "Pago tarjeta", 90, "Deudas", { recurrente: true }),
+    g(53, "Suministros (luz, gas, agua)", 190, "Vivienda", { recurrente: true }),
+    g(52, "Internet y móvil", 107, "Vivienda", { recurrente: true }),
+    g(51, "Comunidad y seguro hogar", 109, "Vivienda", { recurrente: true }),
+    g(50, "Compra del mes (súper)", 560, "Alimentación"),
+    g(49, "Gasolina y transporte", 263, "Transporte"),
+    g(48, "Guardería y colegio", 450, "Educación", { recurrente: true }),
+    g(47, "Salud y seguro médico", 235, "Salud", { recurrente: true }),
+    g(46, "Ropa de los niños", 120, "Familia", { prescindible: true }),
+    g(53, "Restaurantes y bares", 380, "Ocio", { prescindible: true }),
+    g(52, "Compras online", 250, "Ocio", { prescindible: true }),
+    g(50, "Escapada de fin de semana", 350, "Ocio", { prescindible: true }),
+    g(49, "Capricho tecnología", 300, "Ocio", { prescindible: true }),
+    g(45, "Suscripciones", 108, "Suscripciones", { recurrente: true, prescindible: true }),
+    g(44, "Traspaso a ahorro", 100, "Ahorro", { recurrente: true }),
   ]);
 
   revalidatePath("/dashboard");

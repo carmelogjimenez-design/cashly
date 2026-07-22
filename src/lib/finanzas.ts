@@ -808,3 +808,69 @@ export function calcularLogros(
     },
   ];
 }
+
+// ============================================================
+// Tendencias: este mes vs. el mes anterior
+// ============================================================
+export interface Tendencia {
+  etiqueta: string;
+  actual: number;
+  anterior: number;
+  deltaPct: number | null;
+  mejorSiBaja: boolean; // true = que baje es bueno (gastos, caprichos)
+}
+
+export interface Tendencias {
+  hayComparacion: boolean;
+  items: Tendencia[];
+}
+
+export function calcularTendencias(r: ResumenFinanciero): Tendencias {
+  const now = Date.now();
+  const dia = 86400000;
+  const enVentana = (m: Movimiento, desde: number, hasta: number) => {
+    const t = new Date(m.fecha).getTime();
+    return t <= now - desde * dia && t > now - hasta * dia;
+  };
+  const sum = (arr: Movimiento[], pred: (m: Movimiento) => boolean) =>
+    arr.filter(pred).reduce((s, m) => s + m.importe, 0);
+
+  const esGasto = (m: Movimiento) =>
+    m.tipo === "gasto" && !CATEGORIAS_AHORRO.includes(m.categoria);
+  const esIngreso = (m: Movimiento) => m.tipo === "ingreso";
+  const esPresc = (m: Movimiento) => m.tipo === "gasto" && m.prescindible;
+
+  const A = r.movimientos.filter((m) => enVentana(m, 0, 31));
+  const B = r.movimientos.filter((m) => enVentana(m, 31, 62));
+  const hayComparacion = B.length > 0;
+
+  const gA = sum(A, esGasto),
+    gB = sum(B, esGasto);
+  const iA = sum(A, esIngreso),
+    iB = sum(B, esIngreso);
+  const pA = sum(A, esPresc),
+    pB = sum(B, esPresc);
+  const sA = iA - gA,
+    sB = iB - gB;
+
+  const delta = (a: number, b: number) =>
+    b > 0 ? ((a - b) / b) * 100 : null;
+
+  const items: Tendencia[] = [
+    { etiqueta: "Gastos", actual: gA, anterior: gB, deltaPct: delta(gA, gB), mejorSiBaja: true },
+    { etiqueta: "Ahorro", actual: sA, anterior: sB, deltaPct: delta(sA, sB), mejorSiBaja: false },
+    { etiqueta: "Caprichos", actual: pA, anterior: pB, deltaPct: delta(pA, pB), mejorSiBaja: true },
+    { etiqueta: "Ingresos", actual: iA, anterior: iB, deltaPct: delta(iA, iB), mejorSiBaja: false },
+  ];
+
+  return { hayComparacion, items };
+}
+
+// Valor futuro de una cantidad única (interés compuesto anual).
+export function valorFuturoUnico(
+  principal: number,
+  anios: number,
+  tasaAnual: number
+): number {
+  return principal * Math.pow(1 + tasaAnual / 100, anios);
+}
