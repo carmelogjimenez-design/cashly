@@ -6,6 +6,13 @@ import {
   CreditCard,
   PiggyBank,
   ArrowRight,
+  Bell,
+  SlidersHorizontal,
+  Calculator,
+  Sparkles,
+  TrendingUp,
+  Users,
+  Trophy,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import AnilloSalud from "@/components/AnilloSalud";
@@ -17,6 +24,7 @@ import {
   calcularMetricas,
   calcularSalud,
   mejorMovimiento,
+  calcularAlertas,
   hayDeudaCara,
   euro,
 } from "@/lib/finanzas";
@@ -53,15 +61,32 @@ export default async function DashboardPage() {
     resumen.prestamos,
     resumen.perfil?.fondo_objetivo ?? null
   );
+  const alertas = calcularAlertas(m, resumen.prestamos);
+  const numAvisos = alertas.filter((a) => a.nivel !== "bien").length;
 
   return (
     <AppShell>
-      <p className="font-display text-lg font-semibold text-navy/70">
-        Hola, {nombre} 👋
-      </p>
-      <h1 className="font-display text-3xl font-bold leading-tight text-navy">
-        Este es tu panel de Cashly.
-      </h1>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="font-display text-lg font-semibold text-navy/70">
+            Hola, {nombre} 👋
+          </p>
+          <h1 className="font-display text-3xl font-bold leading-tight text-navy">
+            Este es tu panel de Cashly.
+          </h1>
+        </div>
+        <Link
+          href="/alertas"
+          className="relative mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white shadow-card"
+        >
+          <Bell size={20} strokeWidth={2.5} className="text-navy" />
+          {numAvisos > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+              {numAvisos}
+            </span>
+          )}
+        </Link>
+      </div>
 
       {/* Salud financiera */}
       <div className="card mt-6 bg-navy text-white">
@@ -168,11 +193,72 @@ export default async function DashboardPage() {
         />
       </div>
 
+      {/* Herramientas */}
+      <p className="mt-6 font-display text-xl font-bold text-navy">
+        Herramientas
+      </p>
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <Herramienta
+          href="/simulador"
+          icon={<SlidersHorizontal size={22} strokeWidth={2.5} />}
+          titulo="Simulador"
+        />
+        <Herramienta
+          href="/me-lo-puedo-permitir"
+          icon={<Calculator size={22} strokeWidth={2.5} />}
+          titulo="¿Me lo puedo permitir?"
+        />
+        <Herramienta
+          href="/asistente"
+          icon={<Sparkles size={22} strokeWidth={2.5} />}
+          titulo="Asistente"
+        />
+        <Herramienta
+          href="/inversion"
+          icon={<TrendingUp size={22} strokeWidth={2.5} />}
+          titulo="Inversión"
+        />
+        <Herramienta
+          href="/familia"
+          icon={<Users size={22} strokeWidth={2.5} />}
+          titulo="Familia"
+        />
+        <Herramienta
+          href="/logros"
+          icon={<Trophy size={22} strokeWidth={2.5} />}
+          titulo="Logros"
+        />
+      </div>
+
       <p className="mt-6 text-center text-xs font-semibold text-navy/50">
         Cashly ofrece información y educación financiera. No sustituye el
         asesoramiento profesional.
       </p>
     </AppShell>
+  );
+}
+
+function Herramienta({
+  href,
+  icon,
+  titulo,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  titulo: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="card flex flex-col items-center gap-2 px-2 py-4 text-center"
+    >
+      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-yellow text-navy">
+        {icon}
+      </span>
+      <span className="text-xs font-bold leading-tight text-navy">
+        {titulo}
+      </span>
+    </Link>
   );
 }
 

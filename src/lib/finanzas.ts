@@ -412,3 +412,399 @@ export function hayDeudaCara(prestamos: Prestamo[]): boolean {
 export function saldoPorTipo(cuentas: Cuenta[], tipo: string): number {
   return cuentas.filter((c) => c.tipo === tipo).reduce((s, c) => s + c.saldo, 0);
 }
+
+// ============================================================
+// FASE 4 · Simulador "¿qué pasa si…?"
+// ============================================================
+export interface Simulacion {
+  recorteMensual: number; // menos gasto prescindible al mes
+  aporteFondo: number; // € que metes de golpe al fondo
+  amortizarCara: number; // € que amortizas de la deuda más cara
+}
+
+export interface ResultadoSimulacion {
+  salud: Salud;
+  mesesFondo: number;
+  tasaAhorro: number;
+  ahorroReal: number;
+  interesesAhorrados: number;
+}
+
+export function simularSalud(
+  base: Metricas,
+  sim: Simulacion,
+  prestamos: Prestamo[]
+): ResultadoSimulacion {
+  const gastosMes = Math.max(0, base.gastosMes - sim.recorteMensual);
+  const gastosPrescindibles = Math.max(
+    0,
+    base.gastosPrescindibles - sim.recorteMensual
+  );
+  const ahorroReal = base.ingresosMes - gastosMes;
+  const tasaAhorro = base.ingresosMes > 0 ? ahorroReal / base.ingresosMes : 0;
+  const ahorroLiquido = base.ahorroLiquido + sim.aporteFondo;
+  const mesesFondo =
+    ahorroLiquido / (base.gastosEsenciales > 0 ? base.gastosEsenciales : 1);
+
+  const cara = ordenAvalancha(prestamos.filter((p) => p.tin >= 15))[0];
+  const caraRestante = cara
+    ? Math.max(0, cara.saldo_pendiente - sim.amortizarCara)
+    : 0;
+  const tieneDeudaCara = !!cara && caraRestante > 0;
+  const interesesAhorrados = cara
+    ? Math.min(sim.amortizarCara, cara.saldo_pendiente) * (cara.tin / 100)
+    : 0;
+
+  const m2: Metricas = {
+    ...base,
+    gastosMes,
+    gastosPrescindibles,
+    ahorroReal,
+    tasaAhorro,
+    ahorroLiquido,
+    mesesFondo,
+  };
+
+  return {
+    salud: calcularSalud(m2, tieneDeudaCara),
+    mesesFondo,
+    tasaAhorro,
+    ahorroReal,
+    interesesAhorrados,
+  };
+}
+
+// ============================================================
+// FASE 4 · ¿Me lo puedo permitir?
+// ============================================================
+export interface VeredictoCompra {
+  veredicto: "si" | "justo" | "no";
+  titulo: string;
+  detalle: string;
+  dato: string;
+}
+
+export function puedoPermitirme(
+  m: Metricas,
+  importe: number,
+  mensual: boolean
+): VeredictoCompra {
+  if (importe <= 0) {
+    return {
+      veredicto: "justo",
+      titulo: "Introduce una cantidad",
+      detalle: "Escribe cuánto cuesta lo que quieres comprar.",
+      dato: "",
+    };
+  }
+
+  if (mensual) {
+    const nuevoAhorro = m.ahorroReal - importe;
+    const nuevaTasa = m.ingresosMes > 0 ? nuevoAhorro / m.ingresosMes : 0;
+    if (importe <= m.ahorroReal * 0.5) {
+      return {
+        veredicto: "si",
+        titulo: "Sí, entra en tu presupuesto",
+        detalle: `Después seguirías ahorrando ${euro(
+          nuevoAhorro
+        )} al mes. Es un gasto asumible.`,
+        dato: `Tu ahorro pasaría de ${euro(m.ahorroReal)} a ${euro(
+          nuevoAhorro
+        )}/mes (${Math.round(nuevaTasa * 100)}%).`,
+      };
+    }
+    if (nuevoAhorro >= 0) {
+      return {
+        veredicto: "justo",
+        titulo: "Sí, pero te deja muy justo",
+        detalle:
+          "Te lo puedes permitir, aunque te comería casi todo el margen de ahorro. Piensa si compensa.",
+        dato: `Solo te quedarían ${euro(nuevoAhorro)} de ahorro al mes.`,
+      };
+    }
+    return {
+      veredicto: "no",
+      titulo: "Mejor no, ahora mismo",
+      detalle:
+        "Este gasto fijo te pondría en números rojos cada mes. Busca una opción más barata o libera antes otro gasto.",
+      dato: `Te faltarían ${euro(Math.abs(nuevoAhorro))} al mes.`,
+    };
+  }
+
+  // Compra única
+  const otraLiquidez = m.liquidezTotal - m.ahorroLiquido;
+  const delAhorro = Math.max(0, importe - otraLiquidez);
+  const nuevoFondo = Math.max(0, m.ahorroLiquido - delAhorro);
+  const mesesTras =
+    nuevoFondo / (m.gastosEsenciales > 0 ? m.gastosEsenciales : 1);
+  const liquidezTras = m.liquidezTotal - importe;
+
+  if (liquidezTras < m.gastosEsenciales) {
+    return {
+      veredicto: "no",
+      titulo: "Mejor espera",
+      detalle:
+        "Pagarlo ahora te dejaría casi sin colchón para imprevistos. Ahorra un poco más antes.",
+      dato: `Tu fondo bajaría a ${mesesTras.toFixed(1)} meses de gastos.`,
+    };
+  }
+  if (mesesTras < 3) {
+    return {
+      veredicto: "justo",
+      titulo: "Puedes, pero con cuidado",
+      detalle:
+        "Te lo puedes permitir, aunque tu fondo de emergencia quedaría por debajo de lo recomendable. Valora si es urgente.",
+      dato: `Tu fondo pasaría a ${mesesTras.toFixed(1)} meses.`,
+    };
+  }
+  return {
+    veredicto: "si",
+    titulo: "Sí, puedes permitírtelo",
+    detalle:
+      "Después de esta compra seguirías teniendo un colchón sano. Adelante.",
+    dato: `Tu fondo se mantendría en ${mesesTras.toFixed(1)} meses.`,
+  };
+}
+
+// ============================================================
+// FASE 4 · Asistente (respuestas a partir de tus datos)
+// ============================================================
+export interface RespuestaAsistente {
+  pregunta: string;
+  respuesta: string;
+}
+
+export function respuestaAsistente(
+  clave: string,
+  m: Metricas,
+  prestamos: Prestamo[]
+): string {
+  switch (clave) {
+    case "ahorrar": {
+      const extra = m.gastosPrescindibles;
+      return `Ahora mismo te quedan unos ${euro(
+        m.ahorroReal
+      )} al mes. Si recortaras la mitad de lo prescindible (${euro(
+        extra / 2
+      )}), podrías subir a ${euro(m.ahorroReal + extra / 2)}/mes.`;
+    }
+    case "deuda": {
+      const caras = ordenAvalancha(prestamos.filter((p) => p.tipo !== "hipoteca"));
+      if (caras.length === 0) return "No tienes deudas de consumo. ¡Bien!";
+      return `Empieza por "${caras[0].nombre}" (${caras[0].tin.toFixed(
+        1
+      )}% de interés): es la que más te cuesta. Es la estrategia que más dinero te ahorra.`;
+    }
+    case "fondo": {
+      if (m.mesesFondo >= 3)
+        return `Vas bien: cubres ${m.mesesFondo.toFixed(
+          1
+        )} meses de gastos. Lo recomendable es entre 3 y 6.`;
+      return `Cubres ${m.mesesFondo.toFixed(
+        1
+      )} meses. Es tu punto más flojo: intenta llegar al menos a 3 meses antes de otras metas.`;
+    }
+    case "fugas": {
+      const cat = Object.entries(m.gastoPorCategoria)
+        .filter(([c]) => c !== "Deudas" && c !== "Vivienda")
+        .sort((a, b) => b[1] - a[1])[0];
+      return `Este mes lo prescindible suma ${euro(
+        m.gastosPrescindibles
+      )} (${euro(m.gastosPrescindibles * 12)} al año). Tu mayor gasto variable es ${
+        cat ? cat[0] : "Ocio"
+      }.`;
+    }
+    case "invertir": {
+      if (m.mesesFondo < 3)
+        return "Aún no. Primero completa tu fondo de emergencia (3-6 meses). Invertir con el colchón a medias es arriesgado.";
+      if (hayDeudaCara(prestamos))
+        return "Antes de invertir, quita la deuda cara: te cuesta más de lo que suele rentar una inversión.";
+      return `Tienes colchón y sin deuda cara: ya puedes plantearte invertir a largo plazo una parte de tu ahorro. Fórmate primero en la sección de Inversión.`;
+    }
+    case "puntuacion": {
+      return "Tu puntuación sube atacando tu área más floja. Normalmente son el fondo de emergencia y empezar a invertir. Pequeños pasos constantes valen más que grandes cambios puntuales.";
+    }
+    default:
+      return "Prueba con una de las preguntas de abajo.";
+  }
+}
+
+// ============================================================
+// FASE 5 · Inversión (calculadora educativa de interés compuesto)
+// ============================================================
+export function valorFuturoInversion(
+  aporteMensual: number,
+  anios: number,
+  tasaAnual: number
+): { total: number; aportado: number; intereses: number } {
+  const n = anios * 12;
+  const i = tasaAnual / 100 / 12;
+  const total =
+    i === 0 ? aporteMensual * n : aporteMensual * ((Math.pow(1 + i, n) - 1) / i);
+  const aportado = aporteMensual * n;
+  return {
+    total,
+    aportado,
+    intereses: Math.max(0, total - aportado),
+  };
+}
+
+// ============================================================
+// FASE 5 · Alertas (a partir de tus datos)
+// ============================================================
+export interface Alerta {
+  nivel: "peligro" | "aviso" | "bien";
+  titulo: string;
+  detalle: string;
+  href: string;
+}
+
+export function calcularAlertas(m: Metricas, prestamos: Prestamo[]): Alerta[] {
+  const alertas: Alerta[] = [];
+
+  if (hayDeudaCara(prestamos)) {
+    const cara = ordenAvalancha(prestamos.filter((p) => p.tin >= 15))[0];
+    alertas.push({
+      nivel: "peligro",
+      titulo: "Tienes una deuda cara",
+      detalle: `"${cara.nombre}" al ${cara.tin.toFixed(
+        1
+      )}%. Es lo primero que conviene atacar.`,
+      href: "/deudas",
+    });
+  }
+
+  if (m.mesesFondo < 3) {
+    alertas.push({
+      nivel: m.mesesFondo < 1 ? "peligro" : "aviso",
+      titulo: "Fondo de emergencia bajo",
+      detalle: `Cubres ${m.mesesFondo.toFixed(
+        1
+      )} meses. Lo sano es tener entre 3 y 6.`,
+      href: "/fondo-emergencia",
+    });
+  }
+
+  if (m.gastosMes > 0 && m.gastosPrescindibles / m.gastosMes > 0.15) {
+    alertas.push({
+      nivel: "aviso",
+      titulo: "Gasto prescindible alto",
+      detalle: `${euro(m.gastosPrescindibles)} este mes en cosas no esenciales (${euro(
+        m.gastosPrescindibles * 12
+      )} al año).`,
+      href: "/movimientos",
+    });
+  }
+
+  const subs = m.gastoPorCategoria["Suscripciones"] ?? 0;
+  if (subs > 60) {
+    alertas.push({
+      nivel: "aviso",
+      titulo: "Muchas suscripciones",
+      detalle: `${euro(subs)} al mes. Revisa cuáles usas de verdad.`,
+      href: "/movimientos",
+    });
+  }
+
+  if (m.tasaAhorro >= 0.15) {
+    alertas.push({
+      nivel: "bien",
+      titulo: "Buen ritmo de ahorro",
+      detalle: `Ahorras el ${Math.round(
+        m.tasaAhorro * 100
+      )}% de lo que ingresas. ¡Sigue así!`,
+      href: "/objetivos",
+    });
+  }
+
+  return alertas;
+}
+
+// ============================================================
+// FASE 5 · Gamificación (nivel + logros)
+// ============================================================
+export interface Nivel {
+  num: number;
+  nombre: string;
+  progresoPct: number; // dentro del nivel actual
+  faltanPuntos: number;
+}
+
+export function nivelDesde(total: number): Nivel {
+  const bandas = [
+    { min: 0, max: 45, num: 1, nombre: "Aprendiz" },
+    { min: 45, max: 65, num: 2, nombre: "En marcha" },
+    { min: 65, max: 80, num: 3, nombre: "Sólido" },
+    { min: 80, max: 101, num: 4, nombre: "Maestro" },
+  ];
+  const b = bandas.find((x) => total >= x.min && total < x.max) ?? bandas[3];
+  const rango = b.max - b.min;
+  const progresoPct = Math.round(((total - b.min) / rango) * 100);
+  const faltanPuntos = b.num < 4 ? b.max - total : 0;
+  return { num: b.num, nombre: b.nombre, progresoPct, faltanPuntos };
+}
+
+export interface Logro {
+  emoji: string;
+  nombre: string;
+  desc: string;
+  desbloqueado: boolean;
+}
+
+export function calcularLogros(
+  m: Metricas,
+  prestamos: Prestamo[],
+  numObjetivos: number
+): Logro[] {
+  return [
+    {
+      emoji: "🚀",
+      nombre: "Primer paso",
+      desc: "Empezaste a controlar tu dinero",
+      desbloqueado: true,
+    },
+    {
+      emoji: "🎯",
+      nombre: "Con objetivos",
+      desc: "Tienes al menos una meta",
+      desbloqueado: numObjetivos > 0,
+    },
+    {
+      emoji: "🛡️",
+      nombre: "Colchón de 1 mes",
+      desc: "Fondo de 1 mes de gastos",
+      desbloqueado: m.mesesFondo >= 1,
+    },
+    {
+      emoji: "🏰",
+      nombre: "Colchón de 3 meses",
+      desc: "Fondo de 3 meses de gastos",
+      desbloqueado: m.mesesFondo >= 3,
+    },
+    {
+      emoji: "🐷",
+      nombre: "Ahorrador",
+      desc: "Ahorras el 15% o más",
+      desbloqueado: m.tasaAhorro >= 0.15,
+    },
+    {
+      emoji: "✂️",
+      nombre: "Cazador de fugas",
+      desc: "Prescindible por debajo del 15%",
+      desbloqueado:
+        m.gastosMes > 0 && m.gastosPrescindibles / m.gastosMes < 0.15,
+    },
+    {
+      emoji: "💳",
+      nombre: "Sin deuda cara",
+      desc: "Nada por encima del 15% de interés",
+      desbloqueado: !hayDeudaCara(prestamos),
+    },
+    {
+      emoji: "📈",
+      nombre: "Inversor",
+      desc: "Ya haces crecer tu dinero",
+      desbloqueado: m.tieneInversiones,
+    },
+  ];
+}
