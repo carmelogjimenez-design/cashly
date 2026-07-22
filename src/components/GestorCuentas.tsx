@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import type { Cuenta } from "@/lib/tipos";
 import { euro } from "@/lib/finanzas";
 import { crearCuenta, actualizarCuenta, borrarCuenta } from "@/app/actions";
+import { toast } from "@/lib/toast";
 
 const TIPOS: { valor: string; etiqueta: string }[] = [
   { valor: "corriente", etiqueta: "Corriente" },
@@ -93,8 +94,11 @@ function FormCuenta({
         ? await actualizarCuenta(formData)
         : await crearCuenta(formData);
       if (res.ok) {
+        toast(cuenta ? "Cuenta actualizada" : "Cuenta añadida");
         onCerrar();
         router.refresh();
+      } else {
+        toast("No se pudo guardar", "error");
       }
     });
   }
@@ -161,6 +165,7 @@ export function BotonBorrar({ onConfirm }: { onConfirm: () => Promise<unknown> }
         onClick={() =>
           startTransition(async () => {
             await onConfirm();
+            toast("Eliminado");
             router.refresh();
           })
         }

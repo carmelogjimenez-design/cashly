@@ -2,15 +2,30 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  applicationName: "Cashly",
   title: "Cashly — Entiende tu dinero. Mejora tu futuro.",
   description:
     "Tu copiloto financiero. Cashly convierte tus números en decisiones sencillas, sin palabras raras.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Cashly",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: "#16C7E8",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -21,7 +36,6 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
-        {/* Fuentes de marca: Fredoka (display) + Nunito (texto) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"

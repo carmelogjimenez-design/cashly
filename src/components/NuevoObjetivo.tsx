@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { crearObjetivo } from "@/app/actions";
+import { toast } from "@/lib/toast";
 
 export default function NuevoObjetivo() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function NuevoObjetivo() {
     startTransition(async () => {
       const res = await crearObjetivo(formData);
       if (res.ok) {
+        toast("Objetivo creado");
         setAbierto(false);
         router.refresh();
       }

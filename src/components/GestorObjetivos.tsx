@@ -12,6 +12,8 @@ import {
 } from "@/app/actions";
 import Barra from "@/components/Barra";
 import { BotonBorrar } from "@/components/GestorCuentas";
+import { toast } from "@/lib/toast";
+import { celebra } from "@/lib/celebra";
 
 export default function GestorObjetivos({
   objetivos,
@@ -48,9 +50,16 @@ function Tarjeta({ o, onEditar }: { o: Objetivo; onEditar: () => void }) {
   function aportar(signo: number) {
     const n = Number(monto.replace(",", "."));
     if (isNaN(n) || n <= 0) return;
+    const nuevoTotal = o.cantidad_actual + signo * n;
     startTransition(async () => {
       await aportarObjetivo(o.id, signo * n);
       setMonto("");
+      if (signo > 0 && nuevoTotal >= o.cantidad_objetivo) {
+        celebra();
+        toast("¡Objetivo completado! 🎉");
+      } else {
+        toast(signo > 0 ? "Aportado a tu meta" : "Retirado de tu meta");
+      }
       router.refresh();
     });
   }
@@ -129,6 +138,7 @@ function FormObjetivo({
     startTransition(async () => {
       const res = await actualizarObjetivo(formData);
       if (res.ok) {
+        toast("Objetivo actualizado");
         onCerrar();
         router.refresh();
       }

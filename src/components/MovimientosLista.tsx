@@ -16,6 +16,7 @@ import {
   borrarMovimiento,
 } from "@/app/actions";
 import { BotonBorrar } from "@/components/GestorCuentas";
+import { toast } from "@/lib/toast";
 
 export default function MovimientosLista({
   movimientos,
@@ -144,6 +145,7 @@ function FormMovimiento({
         ? await actualizarMovimiento(formData)
         : await crearMovimiento(formData);
       if (res.ok) {
+        toast(movimiento ? "Movimiento actualizado" : "Movimiento añadido");
         onCerrar();
         router.refresh();
       }

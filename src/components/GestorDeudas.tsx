@@ -6,6 +6,7 @@ import { Plus, Pencil } from "lucide-react";
 import type { Prestamo } from "@/lib/tipos";
 import { euro, mesesHasta, interesesPendientes } from "@/lib/finanzas";
 import { crearPrestamo, actualizarPrestamo, borrarPrestamo } from "@/app/actions";
+import { toast } from "@/lib/toast";
 import { BotonBorrar } from "@/components/GestorCuentas";
 
 const TIPOS = [
@@ -114,6 +115,7 @@ function FormDeuda({
         ? await actualizarPrestamo(formData)
         : await crearPrestamo(formData);
       if (res.ok) {
+        toast(prestamo ? "Deuda actualizada" : "Deuda añadida");
         onCerrar();
         router.refresh();
       }

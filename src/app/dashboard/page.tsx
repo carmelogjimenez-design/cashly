@@ -19,6 +19,7 @@ import AppShell from "@/components/AppShell";
 import AnilloSalud from "@/components/AnilloSalud";
 import Barra from "@/components/Barra";
 import CargarEjemplo from "@/components/CargarEjemplo";
+import Contador from "@/components/Contador";
 import { createClient } from "@/lib/supabase/server";
 import { getResumen } from "@/lib/datos";
 import {
@@ -88,7 +89,7 @@ export default async function DashboardPage() {
         >
           <Bell size={20} strokeWidth={2.5} className="text-navy" />
           {numAvisos > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+            <span className="animate-pulse-soft absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
               {numAvisos}
             </span>
           )}
@@ -131,13 +132,13 @@ export default async function DashboardPage() {
           <div>
             <p className="text-xs font-bold text-slate">Ingresos</p>
             <p className="font-display text-lg font-bold text-navy">
-              {euro(m.ingresosMes)}
+              <Contador valor={m.ingresosMes} />
             </p>
           </div>
           <div>
             <p className="text-xs font-bold text-slate">Gastos</p>
             <p className="font-display text-lg font-bold text-navy">
-              {euro(m.gastosMes)}
+              <Contador valor={m.gastosMes} />
             </p>
           </div>
           <div>
@@ -147,7 +148,7 @@ export default async function DashboardPage() {
                 m.ahorroReal >= 0 ? "text-navy" : "text-red-500"
               }`}
             >
-              {euro(m.ahorroReal)}
+              <Contador valor={m.ahorroReal} />
             </p>
           </div>
         </div>
