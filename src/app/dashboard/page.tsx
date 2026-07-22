@@ -7,6 +7,7 @@ import {
   PiggyBank,
   ArrowRight,
   Bell,
+  Landmark,
   SlidersHorizontal,
   Calculator,
   Sparkles,
@@ -50,6 +51,12 @@ export default async function DashboardPage() {
           Vamos a poner en marcha tu Cashly.
         </h1>
         <CargarEjemplo />
+        <p className="mt-4 text-center text-sm font-semibold text-slate">
+          ¿Prefieres empezar con lo tuyo?{" "}
+          <Link href="/cuentas" className="font-bold text-navy underline">
+            Añade tu primera cuenta
+          </Link>
+        </p>
       </AppShell>
     );
   }
@@ -190,6 +197,12 @@ export default async function DashboardPage() {
           icon={<PiggyBank size={20} strokeWidth={2.5} />}
           titulo="Fondo emergencia"
           nota={`${m.mesesFondo.toFixed(1)} meses`}
+        />
+        <Acceso
+          href="/cuentas"
+          icon={<Landmark size={20} strokeWidth={2.5} />}
+          titulo="Mis cuentas"
+          nota={euro(m.liquidezTotal)}
         />
       </div>
 

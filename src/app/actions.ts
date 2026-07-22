@@ -238,3 +238,229 @@ export async function crearObjetivo(formData: FormData) {
   revalidatePath("/objetivos");
   return { ok: true };
 }
+
+// ============================================================
+// CRUD · Cuentas
+// ============================================================
+async function usuario() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return { supabase, user };
+}
+
+export async function crearCuenta(formData: FormData) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  const tipo = String(formData.get("tipo") ?? "corriente");
+  const saldo = Number(formData.get("saldo") ?? 0);
+  if (!nombre) return { ok: false };
+  await supabase
+    .from("cuentas")
+    .insert({ user_id: user.id, nombre, tipo, saldo });
+  revalidatePath("/cuentas");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function actualizarCuenta(formData: FormData) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+  const id = String(formData.get("id") ?? "");
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  const tipo = String(formData.get("tipo") ?? "corriente");
+  const saldo = Number(formData.get("saldo") ?? 0);
+  if (!id || !nombre) return { ok: false };
+  await supabase
+    .from("cuentas")
+    .update({ nombre, tipo, saldo })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  revalidatePath("/cuentas");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function borrarCuenta(id: string) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+  await supabase.from("cuentas").delete().eq("id", id).eq("user_id", user.id);
+  revalidatePath("/cuentas");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+// ============================================================
+// CRUD · Movimientos
+// ============================================================
+export async function crearMovimiento(formData: FormData) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+  const comercio = String(formData.get("comercio") ?? "").trim();
+  const importe = Math.abs(Number(formData.get("importe") ?? 0));
+  const tipo = String(formData.get("tipo") ?? "gasto");
+  const categoria = String(formData.get("categoria") ?? "Imprevistos");
+  const fecha = String(formData.get("fecha") ?? "");
+  const cuenta_id = String(formData.get("cuenta_id") ?? "") || null;
+  const recurrente = formData.get("recurrente") === "on";
+  const prescindible = formData.get("prescindible") === "on";
+  if (!comercio || importe <= 0) return { ok: false };
+  await supabase.from("movimientos").insert({
+    user_id: user.id,
+    comercio,
+    importe,
+    tipo,
+    categoria,
+    fecha: fecha || new Date().toISOString().slice(0, 10),
+    cuenta_id,
+    recurrente,
+    prescindible,
+  });
+  revalidatePath("/movimientos");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function actualizarMovimiento(formData: FormData) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+  const id = String(formData.get("id") ?? "");
+  const comercio = String(formData.get("comercio") ?? "").trim();
+  const importe = Math.abs(Number(formData.get("importe") ?? 0));
+  const tipo = String(formData.get("tipo") ?? "gasto");
+  const categoria = String(formData.get("categoria") ?? "Imprevistos");
+  const fecha = String(formData.get("fecha") ?? "");
+  const recurrente = formData.get("recurrente") === "on";
+  const prescindible = formData.get("prescindible") === "on";
+  if (!id || !comercio || importe <= 0) return { ok: false };
+  await supabase
+    .from("movimientos")
+    .update({ comercio, importe, tipo, categoria, fecha, recurrente, prescindible })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  revalidatePath("/movimientos");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function borrarMovimiento(id: string) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+  await supabase
+    .from("movimientos")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+  revalidatePath("/movimientos");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+// ============================================================
+// CRUD · Deudas (prestamos)
+// ============================================================
+export async function crearPrestamo(formData: FormData) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  const tipo = String(formData.get("tipo") ?? "personal");
+  const saldo_pendiente = Number(formData.get("saldo_pendiente") ?? 0);
+  const cuota_mensual = Number(formData.get("cuota_mensual") ?? 0);
+  const tin = Number(formData.get("tin") ?? 0);
+  const fecha_fin = String(formData.get("fecha_fin") ?? "") || null;
+  if (!nombre) return { ok: false };
+  await supabase.from("prestamos").insert({
+    user_id: user.id,
+    nombre,
+    tipo,
+    saldo_pendiente,
+    cuota_mensual,
+    tin,
+    fecha_fin,
+    comision_amortizacion: 0,
+  });
+  revalidatePath("/deudas");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function actualizarPrestamo(formData: FormData) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+  const id = String(formData.get("id") ?? "");
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  const tipo = String(formData.get("tipo") ?? "personal");
+  const saldo_pendiente = Number(formData.get("saldo_pendiente") ?? 0);
+  const cuota_mensual = Number(formData.get("cuota_mensual") ?? 0);
+  const tin = Number(formData.get("tin") ?? 0);
+  const fecha_fin = String(formData.get("fecha_fin") ?? "") || null;
+  if (!id || !nombre) return { ok: false };
+  await supabase
+    .from("prestamos")
+    .update({ nombre, tipo, saldo_pendiente, cuota_mensual, tin, fecha_fin })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  revalidatePath("/deudas");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function borrarPrestamo(id: string) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+  await supabase.from("prestamos").delete().eq("id", id).eq("user_id", user.id);
+  revalidatePath("/deudas");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+// ============================================================
+// CRUD · Objetivos (editar / borrar / aportar)
+// ============================================================
+export async function actualizarObjetivo(formData: FormData) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+  const id = String(formData.get("id") ?? "");
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  const cantidad_objetivo = Number(formData.get("cantidad_objetivo") ?? 0);
+  const cantidad_actual = Number(formData.get("cantidad_actual") ?? 0);
+  const fecha_objetivo = String(formData.get("fecha_objetivo") ?? "") || null;
+  if (!id || !nombre) return { ok: false };
+  await supabase
+    .from("objetivos")
+    .update({ nombre, cantidad_objetivo, cantidad_actual, fecha_objetivo })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  revalidatePath("/objetivos");
+  return { ok: true };
+}
+
+export async function aportarObjetivo(id: string, cantidad: number) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+  const { data: obj } = await supabase
+    .from("objetivos")
+    .select("cantidad_actual")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!obj) return { ok: false };
+  const nuevo = Math.max(0, Number(obj.cantidad_actual) + cantidad);
+  await supabase
+    .from("objetivos")
+    .update({ cantidad_actual: nuevo })
+    .eq("id", id)
+    .eq("user_id", user.id);
+  revalidatePath("/objetivos");
+  return { ok: true };
+}
+
+export async function borrarObjetivo(id: string) {
+  const { supabase, user } = await usuario();
+  if (!user) return { ok: false };
+  await supabase.from("objetivos").delete().eq("id", id).eq("user_id", user.id);
+  revalidatePath("/objetivos");
+  return { ok: true };
+}
