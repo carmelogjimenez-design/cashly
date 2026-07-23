@@ -369,3 +369,8 @@ select:focus-visible {
 .dark .bg-yellow.text-navy {
   color: #071a3a !important;
 }
+
+/* Sliders sobre superficies oscuras */
+.bg-navy input[type="range"] {
+  background: rgba(255, 255, 255, 0.22);
+}

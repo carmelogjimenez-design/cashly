@@ -5,6 +5,8 @@ import SimuladorInversion from "@/components/SimuladorInversion";
 import Mascota from "@/components/Mascota";
 import EscalaRiesgo from "@/components/EscalaRiesgo";
 import ComparadorInflacion from "@/components/ComparadorInflacion";
+import MaquinaDelTiempo from "@/components/MaquinaDelTiempo";
+import PoderDelHabito from "@/components/PoderDelHabito";
 import { getResumen } from "@/lib/datos";
 import { calcularMetricas, hayDeudaCara } from "@/lib/finanzas";
 
@@ -188,9 +190,18 @@ export default async function InversionPage() {
             Inversión
           </h1>
           <p className="mt-1 font-semibold text-slate">
-            Entiende qué implica antes de dar el paso.
+            Tu yo del futuro te va a dar las gracias.
           </p>
         </div>
+      </div>
+
+      {/* Gancho: el tiempo es el truco */}
+      <div className="mt-6">
+        <MaquinaDelTiempo />
+      </div>
+
+      <div className="mt-4">
+        <PoderDelHabito />
       </div>
 
       {/* Qué es invertir */}
@@ -387,6 +398,24 @@ export default async function InversionPage() {
             <p className="mt-1 text-sm font-semibold text-slate">{c.texto}</p>
           </div>
         ))}
+      </div>
+
+      {/* Cierre: hazlo hábito */}
+      <div className="card mt-6 bg-navy text-center text-white">
+        <p className="font-display text-xl font-bold text-yellow">
+          No va de tener mucho. Va de empezar.
+        </p>
+        <p className="mx-auto mt-2 max-w-xs text-sm font-semibold text-white/85">
+          20 € al mes no te cambian la semana. Repetidos durante años, te
+          cambian la vida. Lo difícil no es la cantidad: es el hábito.
+        </p>
+        <Link href="/objetivos" className="btn-primary mt-5 w-full">
+          Crear mi hábito de ahorro
+        </Link>
+        <p className="mt-3 text-xs font-semibold text-white/60">
+          Empieza con una meta pequeña en Cashly. Cuando tengas tu colchón,
+          hablamos de invertir.
+        </p>
       </div>
 
       <div className="card mt-4 bg-yellow">
